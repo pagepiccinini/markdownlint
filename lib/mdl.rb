@@ -71,14 +71,19 @@ module MarkdownLint
     status = 0
     cli.cli_arguments.each do |filename|
       puts "Checking #{filename}..." if Config[:verbose]
-      doc = Doc.new_from_file(filename, Config[:ignore_front_matter])
-      filename = '(stdin)' if filename == "-"
-      if Config[:show_kramdown_warnings]
-        status = 2 if not doc.parsed.warnings.empty?
-        doc.parsed.warnings.each do |w|
-          puts "#{filename}: Kramdown Warning: #{w}"
+      begin
+        doc = Doc.new_from_file(filename, Config[:ignore_front_matter])
+        filename = '(stdin)' if filename == "-"
+        if Config[:show_kramdown_warnings]
+          status = 2 if not doc.parsed.warnings.empty?
+          doc.parsed.warnings.each do |w|
+            puts "#{filename}: Kramdown Warning: #{w}"
+          end
         end
+      rescue Exception => ex
+        puts "#{filename}: Error while processing doc; #{ex}"
       end
+
       rules.sort.each do |id, rule|
         puts "Processing rule #{id}" if Config[:verbose]
         error_lines = rule.check.call(doc)
